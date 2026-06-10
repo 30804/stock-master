@@ -165,13 +165,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div id="a-out">
       <!-- API KEY SETUP -->
       <div class="key-setup" id="key-setup-box">
-        <h3>🔑 設定 Gemini API Key</h3>
-        <p>輸入你的免費 Gemini API Key 才能開始分析<br>Key 只存在你的瀏覽器裡，不會上傳到任何地方</p>
+        <h3>🔑 設定 OpenRouter API Key</h3>
+        <p>輸入你的免費 OpenRouter API Key 才能開始分析<br>Key 只存在你的瀏覽器裡，不會上傳到任何地方</p>
         <div class="key-input-row">
-          <input class="sinput" id="keyInput" type="password" placeholder="貼上 AIza... 開頭的 Key" style="flex:1;background:var(--bg3)">
+          <input class="sinput" id="keyInput" type="password" placeholder="貼上 sk-or-v1-... 開頭的 Key" style="flex:1;background:var(--bg3)">
           <button class="sbtn" onclick="saveKey()">儲存</button>
         </div>
-        <p style="margin-top:10px;font-size:11px;color:var(--text3)">免費申請：<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue)">aistudio.google.com/app/apikey</a></p>
+        <p style="margin-top:10px;font-size:11px;color:var(--text3)">免費申請：<a href="https://openrouter.ai/settings/keys" target="_blank" style="color:var(--blue)">openrouter.ai/settings/keys</a></p>
       </div>
 
       <div class="empwrap" id="empty-hint" style="display:none">
@@ -301,7 +301,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </nav>
 
 <script>
-const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const OR_API = "https://openrouter.ai/api/v1/chat/completions";
 let wl = JSON.parse(localStorage.getItem('wl4')||'[]');
 let lastSym = '';
 
@@ -309,7 +309,7 @@ function getKey(){ return localStorage.getItem('gemini_key')||''; }
 
 function saveKey(){
   const v = document.getElementById('keyInput').value.trim();
-  if(!v){ alert('請輸入 API Key'); return; }
+  if(!v){ alert("請輸入 API Key"); return; }
   localStorage.setItem('gemini_key', v);
   document.getElementById('key-setup-box').style.display='none';
   document.getElementById('empty-hint').style.display='flex';
@@ -328,26 +328,23 @@ function go2(s){ analyze(s); }
 
 async function callGemini(prompt){
   const key = getKey();
-  if(!key) throw new Error("請先設定 Gemini API Key");
-  const isBearer = key.startsWith("AQ.") || key.startsWith("ya29.");
-  const url = isBearer ? GEMINI_API : `${GEMINI_API}?key=${key}`;
-  const hdrs = {"Content-Type":"application/json"};
-  if(isBearer) hdrs["Authorization"]=`Bearer ${key}`;
-  const r = await fetch(url,{
-    method:"POST", headers: hdrs,
+  if(!key) throw new Error("請先設定 API Key");
+  const r = await fetch(OR_API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${key}`,"HTTP-Referer":"https://30804.github.io","X-Title":"AI股市大師"},
     body: JSON.stringify({
-      contents:[{parts:[{text: prompt}]}],
-      generationConfig:{temperature:0.7, maxOutputTokens:2000},
-      tools:[{googleSearch:{}}]
+      model:"google/gemini-2.0-flash-exp:free",
+      messages:[{role:"user",content:prompt}],
+      max_tokens:2000
     })
   });
-  if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||"Gemini API 錯誤"); }
+  if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||"API 錯誤"); }
   const d = await r.json();
-  return d.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+  return d.choices?.[0]?.message?.content||"";
 }
 
 async function analyze(sym){
-  if(!getKey()){ alert('請先設定 Gemini API Key'); return; }
+  if(!getKey()){ alert('請先設定 OpenRouter API Key'); return; }
   lastSym = sym.toUpperCase();
   nav('analyze',0);
 
@@ -576,7 +573,7 @@ function renderWLStatic(){
 }
 
 async function runScreen(){
-  if(!getKey()){ alert('請先設定 Gemini API Key'); return; }
+  if(!getKey()){ alert('請先設定 OpenRouter API Key'); return; }
   const out=document.getElementById('sc-out');
   out.innerHTML=`<div class="ldwrap"><div class="spin"></div><div class="ldtxt">AI 篩選中…</div></div>`;
   const prompt=`你是選股策略長。請用 Google 搜尋目前符合以下條件的股票，篩選 5 檔：
@@ -614,7 +611,7 @@ async function runScreen(){
 }
 
 async function runBear(){
-  if(!getKey()){ alert('請先設定 Gemini API Key'); return; }
+  if(!getKey()){ alert('請先設定 OpenRouter API Key'); return; }
   const sym=document.getElementById('bear-s').value.trim()||lastSym;
   if(!sym){alert('請輸入股票代號');return;}
   const drop=document.getElementById('bear-d').value;
