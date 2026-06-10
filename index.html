@@ -331,7 +331,7 @@ async function callGemini(prompt){
   if(!key) throw new Error("請先設定 API Key");
   const r = await fetch(OR_API,{
     method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":`Bearer ${key}`,"HTTP-Referer":"https://30804.github.io","X-Title":"AI股市大師"},
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${key}`,"HTTP-Referer":"https://30804.github.io","X-Title":"AI-Stock-Master"},
     body: JSON.stringify({
       model:"google/gemini-2.0-flash-exp:free",
       messages:[{role:"user",content:prompt}],
