@@ -309,7 +309,7 @@ function getKey(){ return localStorage.getItem('gemini_key')||''; }
 
 function saveKey(){
   const v = document.getElementById('keyInput').value.trim();
-  if(!v||!v.startsWith('AIza')){ alert('格式不對，Key 應該是 AIza 開頭'); return; }
+  if(!v||v.length < 10){ alert('Key 太短，請確認複製完整'); return; }
   localStorage.setItem('gemini_key', v);
   document.getElementById('key-setup-box').style.display='none';
   document.getElementById('empty-hint').style.display='flex';
@@ -328,18 +328,22 @@ function go2(s){ analyze(s); }
 
 async function callGemini(prompt){
   const key = getKey();
-  if(!key) throw new Error('請先設定 Gemini API Key');
-  const r = await fetch(`${GEMINI_API}?key=${key}`,{
-    method:'POST', headers:{'Content-Type':'application/json'},
+  if(!key) throw new Error("請先設定 Gemini API Key");
+  const isBearer = key.startsWith("AQ.") || key.startsWith("ya29.");
+  const url = isBearer ? GEMINI_API : `${GEMINI_API}?key=${key}`;
+  const hdrs = {"Content-Type":"application/json"};
+  if(isBearer) hdrs["Authorization"]=`Bearer ${key}`;
+  const r = await fetch(url,{
+    method:"POST", headers: hdrs,
     body: JSON.stringify({
       contents:[{parts:[{text: prompt}]}],
       generationConfig:{temperature:0.7, maxOutputTokens:2000},
       tools:[{googleSearch:{}}]
     })
   });
-  if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'Gemini API 錯誤'); }
+  if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||"Gemini API 錯誤"); }
   const d = await r.json();
-  return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+  return d.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
 }
 
 async function analyze(sym){
