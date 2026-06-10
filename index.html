@@ -309,7 +309,7 @@ function getKey(){ return localStorage.getItem('gemini_key')||''; }
 
 function saveKey(){
   const v = document.getElementById('keyInput').value.trim();
-  if(!v||v.length < 10){ alert('Key 太短，請確認複製完整'); return; }
+  if(!v){ alert('請輸入 API Key'); return; }
   localStorage.setItem('gemini_key', v);
   document.getElementById('key-setup-box').style.display='none';
   document.getElementById('empty-hint').style.display='flex';
